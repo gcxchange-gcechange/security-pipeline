@@ -13,7 +13,7 @@ Security scanning for C# and js/ts projects.
 
 ## Prerequisites
 
-You will need to setup a build variable secret named `NVD_API_KEY` to run the OWASP dependency scan.
+You will need to setup a pipeline secret variable named `NVD_API_KEY` to run the OWASP dependency scan.
 You can request a key [here](https://nvd.nist.gov/developers/request-an-api-key).
 
 ## Version
