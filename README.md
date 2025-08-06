@@ -26,7 +26,7 @@ You can request a key [here](https://nvd.nist.gov/developers/request-an-api-key)
 2. Connect to the repository in either GitHub or Azure Repos Git.
 3. Configure the pipeline to any template, we will replace the code so it doesn't matter.
 4. On the review step replace the code with ether `frontend-scan.yml` or the `backend-scan.yml` file, depending on if the project is nodeJS or .Net.
-5. If the project is .Net and you're using the `backend-scan.yml` you need to setup a new variable for the pipeline. The variable name should be `NVD_API_KEY` and set to secret. The value should be the API key for WASP dependency scan which you can request [here](https://nvd.nist.gov/developers/request-an-api-key).
+5. If the project is .Net and you're using the `backend-scan.yml` you need to setup a new variable for the pipeline. The variable name should be `NVD_API_KEY` and set to secret. The value should be the API key for OWASP dependency scan which you can request [here](https://nvd.nist.gov/developers/request-an-api-key).
 <img width="722" height="920" alt="image" src="https://github.com/user-attachments/assets/597a1d03-c754-405e-b1bf-5c8db3a8b916" />
 
 
