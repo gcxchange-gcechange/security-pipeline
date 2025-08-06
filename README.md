@@ -2,9 +2,7 @@
 
 ## Summary
 
-Security scanning for C# and js/ts projects.
-- Frontend scan on the condition that `package.json` or `tsconfig.json` are in the root directory.
-- Backend scan on the condition that `*.csproj` or `*.sln` are in the root directory.
+Security scanning pipeline for .NET and NodeJS projects.
 - Frontend: npm audit report - published to artifacts.
 - Frontend: Retire.js scan - published to artifacts.
 - Backend: Semgrep scan
@@ -29,5 +27,9 @@ You can request a key [here](https://nvd.nist.gov/developers/request-an-api-key)
 5. If the project is .Net and you're using the `backend-scan.yml` you need to setup a new variable for the pipeline. The variable name should be `NVD_API_KEY` and set to secret. The value should be the API key for OWASP dependency scan which you can request [here](https://nvd.nist.gov/developers/request-an-api-key).
 <img width="722" height="920" alt="image" src="https://github.com/user-attachments/assets/597a1d03-c754-405e-b1bf-5c8db3a8b916" />
 
+## Ignore Packages (Frontend Only)
 
+1. Add a file named `ignored-packages.txt` in the same directory as your .yml file.
+2. Add each package that should be ignored on its own line within the file.
+3. Save and run the pipeline.
 
