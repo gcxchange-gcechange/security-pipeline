@@ -29,6 +29,8 @@ You can request a key [here](https://nvd.nist.gov/developers/request-an-api-key)
 
 ## Ignore Packages (Frontend Only)
 
+Follow these steps to ignore specific npm packages during the npm audit.
+
 1. Add a file named `ignored-packages.txt` in the same directory as your .yml file.
 2. Add each package that should be ignored on its own line within the file.
 3. Save and run the pipeline.
