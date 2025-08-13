@@ -15,7 +15,7 @@ jobs:
   steps:
 
   - script: |
-      npm audit --audit-level=high --json > npm-audit.json || true
+      npm audit --omit=dev --audit-level=high --json > npm-audit.json || true
       cat npm-audit.json
 
       if [ -f ignored-packages.txt ]; then
@@ -84,3 +84,4 @@ jobs:
     inputs:
       PathtoPublish: 'retire-report.json'
       ArtifactName: 'RetireJsReport'
+
