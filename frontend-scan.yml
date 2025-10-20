@@ -1,3 +1,5 @@
+name: Security-Scan_$(Build.Repository.Name)_$(Build.BuildNumber)
+
 trigger: none
 
 pr:
@@ -84,4 +86,5 @@ jobs:
     inputs:
       PathtoPublish: 'retire-report.json'
       ArtifactName: 'RetireJsReport'
+
 
