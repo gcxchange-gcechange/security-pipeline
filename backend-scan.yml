@@ -1,4 +1,4 @@
-name: Security-Scan
+name: Security-Scan-NET
 
 trigger: none
 
@@ -129,6 +129,7 @@ stages:
           echo "All security scans passed"
         fi
       displayName: 'Final Check'
+
 
 
 
