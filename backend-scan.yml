@@ -1,4 +1,4 @@
-name: Security-Scan_$(Build.Repository.Name)_$(Build.BuildNumber)
+name: Security-Scan
 
 trigger: none
 
@@ -129,5 +129,6 @@ stages:
           echo "All security scans passed"
         fi
       displayName: 'Final Check'
+
 
 
