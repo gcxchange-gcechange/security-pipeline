@@ -29,14 +29,14 @@ jobs:
       high=$(jq --argjson ignored "$ignored" '
         [.vulnerabilities
           | to_entries[]
-          | select(.value.name as $name | ($ignored | index($name)) | not)
+          | select(.key as $name | ($ignored | index($name)) | not)
           | select(.value.severity == "high")
         ] | length' npm-audit.json)
   
       critical=$(jq --argjson ignored "$ignored" '
         [.vulnerabilities
           | to_entries[]
-          | select(.value.name as $name | ($ignored | index($name)) | not)
+          | select(.key as $name | ($ignored | index($name)) | not)
           | select(.value.severity == "critical")
         ] | length' npm-audit.json)
   
@@ -50,9 +50,9 @@ jobs:
       jq -r --argjson ignored "$ignored" '
         .vulnerabilities
         | to_entries[]
-        | select(.value.name as $name | ($ignored | index($name)) | not)
+        | select(.key as $name | ($ignored | index($name)) | not)
         | select(.value.severity == "high" or .value.severity == "critical")
-        | .value.name
+        | .key
       ' npm-audit.json | sort -u
   
       echo "------------------------------------"
