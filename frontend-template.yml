@@ -63,7 +63,7 @@ jobs:
       else
         echo "No high or critical vulnerabilities found."
       fi
-  displayName: 'Run npm audit'
+    displayName: 'Run npm audit'
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish npm audit report'
