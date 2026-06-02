@@ -50,7 +50,18 @@ jobs:
         echo "------------------------------------"
         echo "##vso[task.logissue type=error]npm audit found $high high and $critical critical vulnerabilities."
       else
-        echo "No high or critical vulnerabilities found."
+        ignored_affected=$(jq -r --argjson ignored "$ignored" '
+          .vulnerabilities
+          | to_entries[]
+          | select(.key as $name | ($ignored | index($name)))
+          | select(.value.severity == "high" or .value.severity == "critical")
+          | .key
+        ' npm-audit.json | sort -u)
+        if [ -n "$ignored_affected" ]; then
+          echo "No high or critical vulnerabilities found (the following were ignored: $(echo "$ignored_affected" | tr '\n' ',' | sed 's/,$//'))."
+        else
+          echo "No high or critical vulnerabilities found."
+        fi
       fi
     displayName: 'Run npm audit'
 
