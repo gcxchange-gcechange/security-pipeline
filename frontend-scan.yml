@@ -22,7 +22,7 @@ jobs:
 
       if [ -f ignored-packages.txt ]; then
         echo "Using ignored-packages.txt..."
-        ignored=$(cat ignored-packages.txt | grep -v '^[[:space:]]*$' | jq -R . | jq -s .)
+        ignored=$(grep -v '^[[:space:]]*$' ignored-packages.txt | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | jq -R . | jq -s .)
         echo "Ignored packages JSON:"
         echo "$ignored"
       else
