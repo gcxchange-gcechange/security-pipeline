@@ -49,6 +49,7 @@ jobs:
         echo "$affected"
         echo "------------------------------------"
         echo "##vso[task.logissue type=error]npm audit found $high high and $critical critical vulnerabilities."
+        exit 1
       else
         ignored_affected=$(jq -r --argjson ignored "$ignored" '
           .vulnerabilities
