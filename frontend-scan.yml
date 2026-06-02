@@ -22,7 +22,9 @@ jobs:
 
       if [ -f ignored-packages.txt ]; then
         echo "Using ignored-packages.txt..."
-        ignored=$(jq -R . ignored-packages.txt | jq -s .)
+        ignored=$(jq -R -s 'split("\n") | map(select(length >0))' ignored-packages.txt)
+        echo "Ignored packages JSON:"
+        echo "$ignored"
       else
         echo "ignored-packages.txt not found. Proceeding without ignored packages."
         ignored='[]'
@@ -30,9 +32,9 @@ jobs:
 
       high=$(jq --argjson ignored "$ignored" '
         [.vulnerabilities[]
-          | select(.name as $name | ($ignored | index($name) | not))
           | .via[]
           | select(type=="object")
+          | select(.name as $name | ($ignored | index($name) | not))
           | select(.severity == "high")
         ] | length' npm-audit.json)
 
