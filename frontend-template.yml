@@ -4,6 +4,16 @@ jobs:
   steps:
 
   - script: |
+      LOCKFILE_DIR=$(find . -name package-lock.json -exec dirname {} \; | head -n 1)
+
+      if [ -z "$LOCKFILE_DIR" ]; then
+        echo "No package-lock.json found"
+        exit 1
+      fi
+  
+      echo "Using lockfile directory: $LOCKFILE_DIR"
+      cd "$LOCKFILE_DIR"
+      
       npm audit --omit=dev --audit-level=high --json > npm-audit.json || true
       cat npm-audit.json
   
