@@ -4,60 +4,67 @@ jobs:
   steps:
 
   - script: |
+      set -e
+
       LOCKFILE_DIR=$(find . -name package-lock.json -exec dirname {} \; | head -n 1)
 
       if [ -z "$LOCKFILE_DIR" ]; then
         echo "No package-lock.json found"
         exit 1
       fi
-  
+
       echo "Using lockfile directory: $LOCKFILE_DIR"
       cd "$LOCKFILE_DIR"
-      
-      npm audit --omit=dev --audit-level=high --json > npm-audit.json || true
-      cat npm-audit.json
-  
+
+      AUDIT_FILE="$(Build.SourcesDirectory)/npm-audit.json"
+
+      npm audit --omit=dev --audit-level=high --json > "$AUDIT_FILE" || true
+      cat "$AUDIT_FILE"
+
       if [ -f ignored-packages.txt ]; then
         echo "Using ignored-packages.txt..."
-        ignored=$(grep -v '^[[:space:]]*$' ignored-packages.txt | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | jq -R . | jq -s .)
+        ignored=$(grep -v '^[[:space:]]*$' ignored-packages.txt \
+          | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' \
+          | jq -R . | jq -s .)
         echo "Ignored packages:"
         echo "$ignored"
       else
         echo "ignored-packages.txt not found. Proceeding without ignored packages."
         ignored='[]'
       fi
-  
+
       high=$(jq --argjson ignored "$ignored" '
         [.vulnerabilities
           | to_entries[]
           | select(.key as $name | ($ignored | index($name)) | not)
           | select(.value.severity == "high")
-        ] | length' npm-audit.json)
-  
+        ] | length' "$AUDIT_FILE")
+
       critical=$(jq --argjson ignored "$ignored" '
         [.vulnerabilities
           | to_entries[]
           | select(.key as $name | ($ignored | index($name)) | not)
           | select(.value.severity == "critical")
-        ] | length' npm-audit.json)
-  
+        ] | length' "$AUDIT_FILE")
+
       echo "High vulnerabilities (excluding ignored packages): $high"
       echo "Critical vulnerabilities (excluding ignored packages): $critical"
-  
+
       affected=$(jq -r --argjson ignored "$ignored" '
         .vulnerabilities
         | to_entries[]
         | select(.key as $name | ($ignored | index($name)) | not)
         | select(.value.severity == "high" or .value.severity == "critical")
         | .key
-      ' npm-audit.json | sort -u)
-      
+      ' "$AUDIT_FILE" | sort -u)
+
       if [ -n "$affected" ]; then
         echo ""
         echo "Affected packages (excluding ignored):"
         echo "------------------------------------"
         echo "$affected"
         echo "------------------------------------"
+
         echo "##vso[task.logissue type=error]npm audit found $high high and $critical critical vulnerabilities."
         exit 1
       else
@@ -67,9 +74,10 @@ jobs:
           | select(.key as $name | ($ignored | index($name)))
           | select(.value.severity == "high" or .value.severity == "critical")
           | .key
-        ' npm-audit.json | sort -u)
+        ' "$AUDIT_FILE" | sort -u)
+
         if [ -n "$ignored_affected" ]; then
-          echo "No high or critical vulnerabilities found (the following were ignored: $(echo "$ignored_affected" | tr '\n' ',' | sed 's/,$//'))."
+          echo "No high or critical vulnerabilities found (ignored: $(echo "$ignored_affected" | tr '\n' ',' | sed 's/,$//'))."
         else
           echo "No high or critical vulnerabilities found."
         fi
@@ -80,16 +88,21 @@ jobs:
     displayName: 'Publish npm audit report'
     condition: always()
     inputs:
-      PathtoPublish: 'npm-audit.json'
+      PathtoPublish: '$(Build.SourcesDirectory)/npm-audit.json'
       ArtifactName: 'NpmAuditReport'
 
   - script: |
-      npm install -g retire
-      retire --outputformat json --outputpath retire-report.json || true
-      cat retire-report.json
+      set -e
 
-      # Check if vulnerabilities array is not empty
-      vulns=$(jq '.data | map(.results | length) | add' retire-report.json)
+      RETIRE_FILE="$(Build.SourcesDirectory)/retire-report.json"
+
+      npm install -g retire
+
+      retire --outputformat json --outputpath "$RETIRE_FILE" || true
+      cat "$RETIRE_FILE"
+
+      vulns=$(jq '.data | map(.results | length) | add' "$RETIRE_FILE")
+
       echo "Retire.js vulnerabilities found: $vulns"
 
       if [ "$vulns" -gt 0 ]; then
@@ -103,6 +116,7 @@ jobs:
 
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Retire.js report'
+    condition: always()
     inputs:
-      PathtoPublish: 'retire-report.json'
+      PathtoPublish: '$(Build.SourcesDirectory)/retire-report.json'
       ArtifactName: 'RetireJsReport'
