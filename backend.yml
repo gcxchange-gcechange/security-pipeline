@@ -16,6 +16,9 @@ resources:
       ref: refs/heads/master
       endpoint: 'GCExchange (3)'
 
+variables:
+  - group: SecurityVariables
+
 pool:
   vmImage: ubuntu-latest
 
