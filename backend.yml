@@ -16,13 +16,8 @@ resources:
       ref: refs/heads/master
       endpoint: 'GCExchange (3)'
 
-variables:
-  NVD_API_KEY: $(NVD_API_KEY)
-
 pool:
   vmImage: ubuntu-latest
 
 extends:
   template: backend-template.yml@pipeline-templates
-  parameters:
-    nvdApiKey: $(NVD_API_KEY)
