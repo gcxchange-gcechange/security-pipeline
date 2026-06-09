@@ -16,6 +16,10 @@ resources:
       ref: refs/heads/master
       endpoint: 'GCExchange (3)'
 
+variables:
+  - name: NVD_API_KEY
+    value: $(NVD_API_KEY)
+
 pool:
   vmImage: ubuntu-latest
 
