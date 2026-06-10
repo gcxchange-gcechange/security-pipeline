@@ -62,31 +62,38 @@ jobs:
     displayName: 'Verify NVD_API_KEY'
     env:
       NVD_API_KEY: $(NVD_API_KEY)
-      
-  - script:
-      mkdir -p $(Build.ArtifactStagingDirectory)/dependency
-      chmod 777 $(Build.ArtifactStagingDirectory)/dependency
-    displayName: 'Prepare dependency-check output dir'
     
   - script: |
-      mkdir -p $(Build.ArtifactStagingDirectory)/dependency
+      REPORT_DIR="$(Build.ArtifactStagingDirectory)/dependency"
+      mkdir -p "$REPORT_DIR"
+      chmod 777 "$REPORT_DIR"
+      
       docker run --rm \
         -e NVD_API_KEY=${NVD_API_KEY} \
-        -v $(Build.SourcesDirectory):/src \
-        -v $(Build.ArtifactStagingDirectory)/dependency:/report \
+        -v "$(Build.SourcesDirectory):/src" \
+        -v "$REPORT_DIR:/report" \
         owasp/dependency-check:latest \
         --project "AzureFunctionApp" \
         --scan /src \
         --nvdApiKey "${NVD_API_KEY}" \
         --nvdValidForHours 24 \
         --nvdMaxRetryCount 5 \
+        --failOnCVSS 7 \
         --format HTML \
+        --format JSON \
         --enableRetired \
         --out /report \
         --log /report/debug.log
+        
       EXIT_CODE=$?
-      echo "Dependency-Check exit code: $EXIT_CODE"
-      if [ $EXIT_CODE -ne 0 ]; then
+      echo "Exit code: $EXIT_CODE"
+      echo "Files in report dir:"
+      ls -la "$REPORT_DIR"
+
+      if [ $EXIT_CODE -eq 12 ]; then
+        echo "Vulnerabilities found — see report"
+        echo "##vso[task.setvariable variable=DependencyFailed]true"
+      elif [ $EXIT_CODE -ne 0 ]; then
         echo "##vso[task.setvariable variable=DependencyFailed]true"
       fi
     displayName: 'Run OWASP Dependency-Check'
@@ -105,6 +112,7 @@ jobs:
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)/dependency'
       ArtifactName: 'DependencyReport'
+    condition: always()
       
   # Final Check
   - script: |
