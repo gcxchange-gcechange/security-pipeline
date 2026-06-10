@@ -24,5 +24,3 @@ pool:
 
 extends:
   template: backend-template.yml@pipeline-templates
-  parameters:
-    nvdApiKey: $(NVD_API_KEY)
