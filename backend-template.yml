@@ -14,10 +14,12 @@ jobs:
   - script: |
       dotnet restore
     displayName: 'Restore NuGet Packages'
+    
   # Semgrep
   - script: |
       pip install semgrep
     displayName: 'Install Semgrep'
+    
   - script: |
       semgrep scan --config auto --error
       if [ $? -ne 0 ]; then
@@ -25,6 +27,7 @@ jobs:
       fi
     displayName: 'Run Semgrep Scan'
     continueOnError: true
+    
   # Gitleaks
   - script: |
       curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.18.2/gitleaks_8.18.2_linux_x64.tar.gz -o gitleaks.tar.gz
@@ -32,6 +35,7 @@ jobs:
       chmod +x gitleaks
       sudo mv gitleaks /usr/local/bin/gitleaks
     displayName: 'Install Gitleaks'
+    
   - script: |
       mkdir -p $(Build.ArtifactStagingDirectory)/gitleaks
       gitleaks detect \
@@ -43,11 +47,13 @@ jobs:
       fi
     displayName: 'Run Gitleaks'
     continueOnError: true
+    
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Gitleaks Report'
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)/gitleaks'
       ArtifactName: 'GitleaksReport'
+      
   # OWASP Dependency-Check
   - script: |
       docker run --rm \
@@ -56,6 +62,12 @@ jobs:
     displayName: 'Verify NVD_API_KEY'
     env:
       NVD_API_KEY: $(NVD_API_KEY)
+      
+  - script:
+      mkdir -p $(Build.ArtifactStagingDirectory)/dependency
+      chmod 777 $(Build.ArtifactStagingDirectory)/dependency
+    displayName: 'Prepare dependency-check output dir'
+    
   - script: |
       mkdir -p $(Build.ArtifactStagingDirectory)/dependency
       docker run --rm \
@@ -66,22 +78,34 @@ jobs:
         --project "AzureFunctionApp" \
         --scan /src \
         --nvdApiKey "${NVD_API_KEY}" \
+        --nvdValidForHours 24 \
+        --nvdMaxRetryCount 5 \
         --format HTML \
         --enableRetired \
         --out /report \
         --log /report/debug.log
-      if [ $? -ne 0 ]; then
+      EXIT_CODE=$?
+      echo "Dependency-Check exit code: $EXIT_CODE"
+      if [ $EXIT_CODE -ne 0 ]; then
         echo "##vso[task.setvariable variable=DependencyFailed]true"
       fi
     displayName: 'Run OWASP Dependency-Check'
     env:
       NVD_API_KEY: $(NVD_API_KEY)
     continueOnError: true
+
+  - script: |
+      echo "Dependency-Check Debug Log"
+      cat $(Build.ArtifactStagingDirectory)/dependency/debug.log || echo "No debug log found"
+    displayName: 'Print Dependency-Check Debug Log'
+    condition: always()
+    
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Dependency-Check Report'
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)/dependency'
       ArtifactName: 'DependencyReport'
+      
   # Final Check
   - script: |
       failed=false
