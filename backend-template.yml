@@ -1,7 +1,5 @@
-parameters:
-  - name: nvdApiKey
-    type: string
-    default: ''
+variables:
+  - group: SecurityVariables
     
 jobs:
 - job: RunScans
@@ -53,19 +51,21 @@ jobs:
   # OWASP Dependency-Check
   - script: |
       docker run --rm \
-        --env NVD_API_KEY=${{ parameters.nvdApiKey }} \
+        --env NVD_API_KEY=${NVD_API_KEY} \
         alpine sh -c 'echo "NVD_API_KEY inside container is: ${NVD_API_KEY:+set}"'
     displayName: 'Verify NVD_API_KEY'
+    env:
+      NVD_API_KEY: $(NVD_API_KEY)
   - script: |
       mkdir -p $(Build.ArtifactStagingDirectory)/dependency
       docker run --rm \
-        -e NVD_API_KEY=${{ parameters.nvdApiKey }} \
+        -e NVD_API_KEY=${NVD_API_KEY} \
         -v $(Build.SourcesDirectory):/src \
         -v $(Build.ArtifactStagingDirectory)/dependency:/report \
         owasp/dependency-check:latest \
         --project "AzureFunctionApp" \
         --scan /src \
-        --nvdApiKey "${{ parameters.nvdApiKey }}" \
+        --nvdApiKey "${NVD_API_KEY}" \
         --format HTML \
         --enableRetired \
         --out /report \
@@ -75,7 +75,7 @@ jobs:
       fi
     displayName: 'Run OWASP Dependency-Check'
     env:
-      NVD_API_KEY: ${{ parameters.nvdApiKey }}
+      NVD_API_KEY: $(NVD_API_KEY)
     continueOnError: true
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Dependency-Check Report'
